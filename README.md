@@ -1,40 +1,88 @@
 # REA Orchestrator
 
-**Status, scaffold and design specification.**
+**Status, runnable local prototype.** This repository now contains a small dispatcher for explicitly registered, in-process specialist workers. It is not a distributed scheduler, a production agent runtime, or a complete MCP integration.
 
-REA Orchestrator is intended to route bounded investigation tasks to specialist REAs and tools. This repository documents the intended responsibility. It does not yet provide a complete orchestration engine.
+## What works now
 
-## Intended responsibilities
+- Validates a bounded JSON task request and rejects unknown fields.
+- Dispatches only to a worker registered by the application operator.
+- Defaults to requiring explicit approval for each request.
+- Records start and finish events as append-only JSON Lines when an audit path is configured.
+- Captures worker exceptions, reports caller-side timeouts, and supports in-memory replay of successful idempotency keys.
+- Includes a CLI and deterministic demo worker, with unit tests and GitHub Actions CI.
 
-- Accept a structured investigation request.
-- Identify eligible specialist adapters.
-- Check task constraints, permissions and required inputs.
-- Create a bounded plan with explicit dependencies.
-- Record dispatch, completion, failure and timeout states.
-- Collect results using the REA Core contract.
-- Leave consequential execution decisions under explicit operator control.
+## Quick start
 
-## Proposed task lifecycle
+Install Python 3.10 or later, then run from a clone of this repository.
 
-`proposed → approved → dispatched → completed | failed | blocked | cancelled`
+```bash
+python -m pip install -e ".[test]"
+python -m pytest
+rea-orchestrator --list-workers
+```
 
-Each task should record inputs, selected adapter, declared permissions, timeout, result references and execution status. Dispatch does not prove that a specialist performed valid work.
+Create `task.json`
 
-## Interfaces
+```json
+{
+  "task_id": "demo-001",
+  "specialist": "demo.echo",
+  "input": {
+    "question": "What evidence would verify this claim?"
+  },
+  "requires_approval": true,
+  "timeout_seconds": 5,
+  "idempotency_key": "demo-001"
+}
+```
 
-The intended shared data contract is [REA Core](https://github.com/DerekWiner/rea-core). Tool integrations may use MCP adapters where appropriate, but this scaffold does not claim a complete MCP orchestration integration.
+Dispatch it only after explicit approval.
 
-## Safety requirements
+```bash
+rea-orchestrator task.json --approve --audit ./run/events.jsonl
+```
 
-- Do not execute untrusted artifacts by default.
-- Do not grant credentials or network access implicitly.
-- Enforce timeouts and resource limits outside model prompts.
-- Preserve provenance and error states.
-- Make retries idempotent where practical.
-- Require approval for high-impact actions.
+The built-in `demo.echo` worker returns the supplied payload. It does not call an LLM, search the web, run an experiment, or produce a verified finding.
 
-## Current status and next milestone
+## Task lifecycle
 
-Task routing, dependency scheduling, worker isolation, retries, durable state and production observability remain to be implemented and tested.
+The request model records task identity, specialist name, JSON input, caller wait timeout, approval requirement, optional idempotency key, and namespaced metadata. Outcomes are `completed`, `failed`, or `timed_out`. Approval failures and unknown worker names are rejected before a worker is called.
 
-Build one deterministic local dispatcher for a mock specialist, using a REA Core record as input and output. Add tests for invalid input, timeout, failure and provenance before connecting external tools.
+The dispatcher does not automatically retry a failed worker. The idempotency cache is in memory only, applies only to successful results, and is not a durable exactly-once guarantee.
+
+## Security boundaries and known limitations
+
+- Worker names are allow-listed in application code. Task JSON cannot import code or register workers.
+- Approval is a local API/CLI gate, not an identity system or cryptographic authorisation mechanism.
+- The timeout limits how long the caller waits. Python cannot safely terminate a running thread, so a timed-out worker may continue running. This is not a sandbox.
+- Workers execute in the same process and inherit its permissions. Do not register untrusted code. For untrusted or expensive work, use a separate process or container with operating-system resource limits and explicit filesystem/network policy.
+- Audit JSONL is append-only by convention, not tamper-proof. It may contain task metadata and should be stored with appropriate access controls.
+- The idempotency cache and registry are process-local. There is no durable queue, concurrency scheduler, distributed locking, worker health management, authentication, authorisation service, secrets broker, MCP transport, or database backend.
+- The dispatcher does not validate full REA Core investigation records yet. Integration should use the published REA Core schema and validator rather than silently defining a competing evidence contract.
+
+## Architecture
+
+```text
+JSON task request
+       |
+       v
+TaskRequest validation
+       |
+       v
+Approval gate ---- blocked before dispatch when not approved
+       |
+       v
+Explicit WorkerRegistry
+       |
+       v
+Bounded caller wait + outcome capture
+       |
+       v
+DispatchResult + optional JSONL audit events
+```
+
+The intended contract is [REA Core](https://github.com/DerekWiner/rea-core). The next integration milestone is a specialist adapter that consumes a validated request, returns a REA Core investigation record, and preserves artifact/evidence provenance. MCP adapters can be added after this local interface is stable.
+
+## License
+
+MIT. Worker integrations and third-party tools remain subject to their own licences and terms.
