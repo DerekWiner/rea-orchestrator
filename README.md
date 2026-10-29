@@ -10,6 +10,7 @@
 - Records start and finish events as append-only JSON Lines when an audit path is configured.
 - Captures worker exceptions, reports caller-side timeouts, and supports in-memory replay of successful idempotency keys.
 - Includes a CLI and deterministic demo worker, with unit tests and GitHub Actions CI.
+- Includes a versioned upstream REA capture normalizer that maps captured tool runs into REA Core v1-shaped records, with provenance hashes and explicit limitations.
 
 ## Quick start
 
@@ -58,7 +59,7 @@ The dispatcher does not automatically retry a failed worker. The idempotency cac
 - Workers execute in the same process and inherit its permissions. Do not register untrusted code. For untrusted or expensive work, use a separate process or container with operating-system resource limits and explicit filesystem/network policy.
 - Audit JSONL is append-only by convention, not tamper-proof. It may contain task metadata and should be stored with appropriate access controls.
 - The idempotency cache and registry are process-local. There is no durable queue, concurrency scheduler, distributed locking, worker health management, authentication, authorisation service, secrets broker, MCP transport, or database backend.
-- The dispatcher does not validate full REA Core investigation records yet. Integration should use the published REA Core schema and validator rather than silently defining a competing evidence contract.
+- The dispatcher does not yet run REA Core validation automatically at dispatch completion. The upstream capture normalizer can accept REA Core's validator as a callback, but callers must deliberately wire it in. The normalizer is not an MCP client and its capture envelope is our adapter contract, not an upstream-native wire format.
 
 ## Architecture
 
@@ -83,7 +84,7 @@ DispatchResult + optional JSONL audit events
 
 The intended contract is [REA Core](https://github.com/DerekWiner/rea-core). The next integration milestone is a specialist adapter that consumes a validated request, returns a REA Core investigation record, and preserves artifact/evidence provenance. MCP adapters can be added after this local interface is stable.
 
-For the upstream investigation engine and its MCP workflows, see the [upstream REA integration plan](docs/upstream-rea-integration.md). Upstream REA is an optional provider, not a replacement for our task policy or REA Core validation. The plan distinguishes documented upstream capabilities from integration code that remains to be built.
+For the upstream investigation engine and its MCP workflows, see the [upstream REA integration plan](docs/upstream-rea-integration.md). The [capture fixture](examples/upstream-rea-capture.json) documents the adapter envelope and is entirely synthetic. The [automation roadmap](docs/automation-roadmap.md) separates completed functionality from operator setup and future work. Upstream REA is an optional provider, not a replacement for our task policy or REA Core validation.
 
 ## License
 
