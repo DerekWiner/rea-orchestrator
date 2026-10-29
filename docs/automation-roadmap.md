@@ -27,10 +27,12 @@ python -m pip install -e ".[test]"
 python -m pytest
 ```
 
-The adapter tests use synthetic data. They do not require an MCP server, model API key, Ghidra, Frida or a live target. To validate an emitted record with REA Core, install REA Core into the same Python environment or run its CLI in its own environment:
+The adapter tests use synthetic data. They do not require an MCP server, model API key, Ghidra, Frida or a live target. The CLI can normalize and validate the included fixture with:
 
 ```bash
-rea-core validate path/to/investigation.json
+python -m pip install -e ".[test]" -e ../rea-core
+rea-orchestrator --normalize-capture examples/upstream-rea-capture.json --validate-core > investigation.json
+rea-core validate investigation.json
 ```
 
 Do not mark a result as verified just because it passes schema validation.
