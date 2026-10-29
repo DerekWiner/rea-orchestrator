@@ -97,3 +97,11 @@ def test_result_summary_is_required_to_create_evidence():
     record = normalize_capture(capture)
     assert record["evidence"] == []
     assert any("no result_summary" in item for item in record["limitations"])
+
+
+
+def test_normalized_record_passes_real_rea_core_validator():
+    from rea_core.validation import validate_document
+
+    record = normalize_capture(fixture(), validate_record=validate_document)
+    assert validate_document(record) == []
