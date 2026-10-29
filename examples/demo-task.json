@@ -1,0 +1,10 @@
+{
+  "task_id": "demo-001",
+  "specialist": "demo.echo",
+  "input": {
+    "question": "What evidence would verify this claim?"
+  },
+  "requires_approval": true,
+  "timeout_seconds": 5,
+  "idempotency_key": "demo-001"
+}
