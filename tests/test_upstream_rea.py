@@ -105,3 +105,24 @@ def test_normalized_record_passes_real_rea_core_validator():
 
     record = normalize_capture(fixture(), validate_record=validate_document)
     assert validate_document(record) == []
+
+
+
+def test_cli_normalizes_fixture_and_validates_with_core(capsys):
+    from pathlib import Path
+    from rea_orchestrator.cli import main
+
+    fixture_path = Path(__file__).parents[1] / "examples" / "upstream-rea-capture.json"
+    result = main(["--normalize-capture", str(fixture_path), "--validate-core"])
+    assert result == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["schema_version"] == "1.0.0"
+    assert output["extensions"]["upstream_rea"]["capture_sha256"]
+
+
+def test_cli_rejects_core_validation_without_capture(capsys):
+    from rea_orchestrator.cli import main
+
+    with pytest.raises(SystemExit) as error:
+        main(["--validate-core", "--list-workers"])
+    assert error.value.code == 2
