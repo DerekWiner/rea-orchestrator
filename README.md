@@ -83,6 +83,8 @@ DispatchResult + optional JSONL audit events
 
 The intended contract is [REA Core](https://github.com/DerekWiner/rea-core). The next integration milestone is a specialist adapter that consumes a validated request, returns a REA Core investigation record, and preserves artifact/evidence provenance. MCP adapters can be added after this local interface is stable.
 
+For the upstream investigation engine and its MCP workflows, see the [upstream REA integration plan](docs/upstream-rea-integration.md). Upstream REA is an optional provider, not a replacement for our task policy or REA Core validation. The plan distinguishes documented upstream capabilities from integration code that remains to be built.
+
 ## License
 
 MIT. Worker integrations and third-party tools remain subject to their own licences and terms.
