@@ -13,7 +13,7 @@ authors = [{ name = "Derek Winer" }]
 dependencies = []
 
 [project.optional-dependencies]
-test = ["pytest>=8,<9"]
+test = ["pytest>=8,<10"]
 
 [project.scripts]
 rea-orchestrator = "rea_orchestrator.cli:main"
