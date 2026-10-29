@@ -1,4 +1,5 @@
 import copy
+import json
 import pytest
 
 from rea_orchestrator.upstream_rea import CaptureError, normalize_capture
