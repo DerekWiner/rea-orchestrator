@@ -1,0 +1,55 @@
+{
+  "capture_version": "1.0",
+  "investigation_id": "synthetic-feature-trace",
+  "created_at": "2026-10-29T00:00:00Z",
+  "title": "Synthetic feature trace",
+  "question": "What code path appears to handle the feature?",
+  "target": {
+    "artifact_id": "synthetic-target",
+    "kind": "repository",
+    "description": "Synthetic fixture used to test the adapter, not a real application.",
+    "uri": "file:///tmp/synthetic-target",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "provider": {
+    "name": "morluto/rea",
+    "version": "fixture-version",
+    "source_revision": "fixture-revision"
+  },
+  "tool_runs": [
+    {
+      "run_id": "feature-trace",
+      "tool_name": "analyze_javascript_application",
+      "status": "completed",
+      "observed_at": "2026-10-29T00:01:00Z",
+      "execution_mode": "static_analysis",
+      "network_access": false,
+      "result_summary": "Synthetic output describes a renderer-to-preload IPC path.",
+      "raw_result": {
+        "path": [
+          "renderer",
+          "preload",
+          "ipc"
+        ]
+      },
+      "limitations": [
+        "All content in this fixture is synthetic."
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "candidate-ipc-path",
+      "statement": "The synthetic tool summary describes a renderer-to-preload IPC path.",
+      "evidence_run_ids": [
+        "feature-trace"
+      ],
+      "confidence": 0.5,
+      "status": "proposed",
+      "validation_notes": "Must be independently checked against a real target before being relied upon."
+    }
+  ],
+  "limitations": [
+    "This fixture does not call upstream REA and does not report a real investigation."
+  ]
+}
