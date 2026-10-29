@@ -45,6 +45,17 @@ rea-orchestrator task.json --approve --audit ./run/events.jsonl
 
 The built-in `demo.echo` worker returns the supplied payload. It does not call an LLM, search the web, run an experiment, or produce a verified finding.
 
+## Normalize a captured upstream REA investigation
+
+The repository includes a versioned capture envelope and normalizer. The fixture is synthetic and is not an upstream-native MCP response format.
+
+```bash
+python -m pip install -e ".[test]" -e ../rea-core
+rea-orchestrator --normalize-capture examples/upstream-rea-capture.json --validate-core > investigation.json
+```
+
+The `--validate-core` option requires the `rea-core` Python package to be installed in the same environment. The command validates the normalized record's schema and references. It does not prove that the tool ran or that its conclusions are true. Keep raw capture files alongside the normalized record under your retention policy.
+
 ## Task lifecycle
 
 The request model records task identity, specialist name, JSON input, caller wait timeout, approval requirement, optional idempotency key, and namespaced metadata. Outcomes are `completed`, `failed`, or `timed_out`. Approval failures and unknown worker names are rejected before a worker is called.
