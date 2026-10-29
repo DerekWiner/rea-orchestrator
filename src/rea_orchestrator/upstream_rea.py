@@ -110,9 +110,10 @@ def normalize_capture(
     methods: list[dict[str, Any]] = []
     evidence: list[dict[str, Any]] = []
     evidence_by_run: dict[str, str] = {}
-    limitations = list(capture.get("limitations", []))
-    if not all(isinstance(item, str) for item in limitations):
-        raise CaptureError("limitations must contain only strings")
+    capture_limitations = capture.get("limitations", [])
+    if not isinstance(capture_limitations, list) or not all(isinstance(item, str) for item in capture_limitations):
+        raise CaptureError("limitations must be an array of strings")
+    limitations = list(capture_limitations)
     seen_runs: set[str] = set()
 
     for index, run in enumerate(runs):
